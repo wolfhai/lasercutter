@@ -6,9 +6,6 @@ import serial
 import time
 import os
 
-stepper_table=[9,10,6,5]
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1) 
-
 def laser(x):
     if (x==0):
 	ser.write("00 31 = ")
@@ -46,32 +43,22 @@ def Brensenham_line(x,y,x2,y2):
         d = d + (2 * dy)
     coords.append((x2,y2))
     return coords 
-   
-#f = open('foo.gcode')
-#firstline = f.readline()
-#a=firstline.split()
-#x1=int(20*float(a[1][1:]))
-#y1=int(20*float(a[2][1:]))
-#f.close()
 
+x2=0;y2=0;x1=0;y1=0
+scale=83.33
+
+stepper_table=[9,10,6,5]
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1) 
 ser.write("FF 37 = ") 
-
 f = open(sys.argv[1])
 content = f.readlines()
-x2=0
-y2=0
-x1=0
-y1=0
-x=0
-y=0
-scale=83.33
 laser(0)
+
 for line in content:
         if (line[:1]=="G"):
 		a=line.split()
 
        		if (a[0]=="G00"):
-			#print line
 			if (a[1][:1]=="Z"):
 				if (float(a[1][1:])<0):
                         		print "Laser on"
@@ -87,14 +74,10 @@ for line in content:
 				x1=x2
 				y1=y2
 				for i in points:
-	    				#print i[0],i[1]
 					ser.write(dec2hex(stepper_table[i[1]&3] | stepper_table[i[0]&3]<<4)+" 38 = ")
 					time.sleep(0.008)
 
-
-
        		if (a[0]=="G01"):
-			#print line
 			if (a[1][:1]=="Z"):
                         	if (float(a[1][1:])<0):
                         		print "Laser on"
@@ -111,15 +94,8 @@ for line in content:
 				y1=y2
 	
 				for i in points:
-	    				#print i[0],i[1]
 					ser.write(dec2hex(stepper_table[i[1]&3] | stepper_table[i[0]&3]<<4)+" 38 = ")
 					time.sleep(.03)
-
-
 ser.write("00 38 = ") 
 f.close()
 ser.close()
-
-
-
-
