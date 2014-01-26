@@ -64,7 +64,7 @@ x1=0
 y1=0
 x=0
 y=0
-scale=100
+scale=83.33
 laser(0)
 for line in content:
         if (line[:1]=="G"):
