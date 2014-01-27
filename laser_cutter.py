@@ -5,15 +5,31 @@ import math
 import serial
 import time
 import os
+from datetime import datetime
+from datetime import timedelta
+
+scale=120
+duty_cycle=3000  #milliseconds
+duty_pause=0.8   #seconds
+speed_move=0.008
+speed_cut=0.03
+
+def millis():
+   dt = datetime.now() - start_time
+   ms = (dt.days * 24 * 60 * 60 + dt.seconds) * 1000 + dt.microseconds / 1000.0
+   return ms
 
 def laser(x):
     if (x==0):
+	print "Laser off"
 	ser.write("00 31 = ")
 	ser.write("00 32 = ")
     if (x==1):
+	print "Laser on"
+	global start_time
+	start_time = datetime.now()
 	ser.write("01 31 = ")
 	ser.write("01 32 = ")
-
 
 def dec2hex(n):
     return "%02X" % n
@@ -44,8 +60,9 @@ def Brensenham_line(x,y,x2,y2):
     coords.append((x2,y2))
     return coords 
 
+global start_time
+
 x2=0;y2=0;x1=0;y1=0
-scale=83.33
 
 stepper_table=[9,10,6,5]
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1) 
@@ -60,11 +77,7 @@ for line in content:
 
        		if (a[0]=="G00"):
 			if (a[1][:1]=="Z"):
-				if (float(a[1][1:])<0):
-                        		print "Laser on"
-					laser(1)
                         	if (float(a[1][1:])>0):
-                        		print "Laser off"
 					laser(0)
 			if (a[1][:1]=="X"):
 				print a[1],a[2]
@@ -75,15 +88,12 @@ for line in content:
 				y1=y2
 				for i in points:
 					ser.write(dec2hex(stepper_table[i[1]&3] | stepper_table[i[0]&3]<<4)+" 38 = ")
-					time.sleep(0.008)
-
-       		if (a[0]=="G01"):
+					time.sleep(speed_move)
+		if (a[0]=="G01"):
 			if (a[1][:1]=="Z"):
                         	if (float(a[1][1:])<0):
-                        		print "Laser on"
 					laser(1)
                         	if (float(a[1][1:])>0):
-                        		print "Laser off"
 					laser(0)
 			if (a[1][:1]=="X"):
 				print a[1],a[2]
@@ -92,10 +102,14 @@ for line in content:
 				points=Brensenham_line(x1,y1,x2,y2)
 				x1=x2
 				y1=y2
-	
 				for i in points:
 					ser.write(dec2hex(stepper_table[i[1]&3] | stepper_table[i[0]&3]<<4)+" 38 = ")
-					time.sleep(.03)
+					time.sleep(speed_cut)
+					if (millis()>duty_cycle):
+						laser(0)
+						time.sleep(duty_pause)
+						laser(1)
 ser.write("00 38 = ") 
 f.close()
 ser.close()
+print "Done"
