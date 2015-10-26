@@ -32,8 +32,7 @@ except:
 
 def millis():
     dt = datetime.now() - start_time
-    ms = (dt.days * 24 * 60 * 60 + dt.seconds) * 1000 + dt.microseconds \
-        / 1000.0
+    ms = (dt.days * 24 * 60 * 60 + dt.seconds) * 1000 + dt.microseconds / 1000.0
     return ms
 
 def laser(x):
